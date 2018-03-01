@@ -24,13 +24,5 @@ function getData($filename = "a_example.in")
         ];
     }
 
-    return [
-        'rows' => $rows,
-        'columns' => $columns,
-        'cars' => $cars,
-        'ridesCount' => $ridesCount,
-        'bonus' => $bonus,
-        'steps' => $steps,
-        'rides' => $rides,
-    ];
+    return [$rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides];
 }
