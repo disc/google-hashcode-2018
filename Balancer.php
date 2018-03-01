@@ -157,28 +157,44 @@ class Balancer
       foreach ($this->rides as $key => $value) {
         $map[$value['index']] = $key;
       }
-      foreach ($this->rides as $num => $r) {
+      foreach ($this->rides as $num => &$r) {
         $carIndex = -1;
-        foreach ($this->result as $i => $rds) {
-          if (count($rds) == 0) {
-            $prev = [
-              'to' => [0, 0],
-              'actual' => 0,
-            ];
-          } else {
-            $ind = $rds[count($rds) - 1];
-            $prev = $this->rides[$map[$ind]];
-            // var_dump($prev);
+        for ($lap = 0; $lap < 2; $lap++) {
+          $prev = null;
+          foreach ($this->result as $i => $rds) {
+            if (count($rds) == 0) {
+              $prev = [
+                'to' => [0, 0],
+                'actual' => 0,
+                'finish' => 0,
+              ];
+            } else {
+              $ind = $rds[count($rds) - 1];
+              $prev = $this->rides[$map[$ind]];
+              // var_dump($prev);
+            }
+            list ($super, $reg) = $this->hasTimeToPickUp($prev, $r);
+            $hasTime = $super || $reg && $lap == 1;
+            $hasFin = $this->hasTimeToFinish($r, $this->steps - 1);
+            // $hasFin = true;
+            if ($hasTime && $hasFin) {
+              $carIndex = $i;
+              break;
+            }
           }
-          if ($this->hasTimeToPickUp($prev, $r) && $this->hasTimeToFinish($r, $this->steps - 1)) {
-            $carIndex = $i;
+          if ($carIndex >= 0) {
+            $r['actual'] = $this->calcActual($r, $prev['actual']);
+            $this->result[$i][] = $r['index'];
             break;
           }
         }
-        if ($carIndex >= 0) {
-          $this->result[$i][] = $r['index'];
-        }
       }
+    }
+
+    public function calcActual($next, $minStart)
+    {
+      $dist = $this->nextDist($next);
+      return max($minStart, $next['start']) + $dist;
     }
 
     public function hasTimeToPickUp($prev, $next)
@@ -186,9 +202,9 @@ class Balancer
       // var_dump($prev);
       $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
       $nextDist = $this->nextDist($next);
-      $superTime = $next['start'] - $prev['actual'];
-      $regTime = $next['finish'] - $nextDist - $prev['actual'];
-      return $regTime >= $dist;
+      $superTime = $next['start'] - min($prev['actual'], $prev['finish']);
+      $regTime = $next['finish'] - $nextDist - min($prev['actual'], $prev['finish']);
+      return [$superTime >= $dist, $regTime >= $dist];
     }
 
     public function nextDist($next)
