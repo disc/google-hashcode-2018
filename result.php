@@ -2,7 +2,6 @@
 
 function toString(array $result) {
   $strings = [];
-  $strings[] = (string) count($result);
   foreach ($result as $carId => $rideIds) {
     if ($rideIds) {
       $strings[] = $carId . ' ' . implode(' ', $rideIds);
