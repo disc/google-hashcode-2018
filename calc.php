@@ -53,6 +53,7 @@ class Calculator
      */
     public function getScore()
     {
+        return 0;
         $score = 0;
         $requests = 0;
 

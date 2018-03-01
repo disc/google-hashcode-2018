@@ -42,9 +42,9 @@ class Balancer
     /**
      * Result format
      *
-     * // cacheID => [videoID]
+     * // carID => [rideID]
      *
-     * [0 => [1, 2], 1 => [2, 4]]
+     * [0 => [1, 2], 1 => [0, 4]]
      *
      * @var array
      */

@@ -3,9 +3,9 @@
 function toString(array $result) {
   $strings = [];
   $strings[] = (string) count($result);
-  foreach ($result as $cacheId => $videoIds) {
-    if ($videoIds) {
-      $strings[] = $cacheId . ' ' . implode(' ', $videoIds);
+  foreach ($result as $carId => $rideIds) {
+    if ($rideIds) {
+      $strings[] = $carId . ' ' . implode(' ', $rideIds);
     }
   }
   return implode(PHP_EOL, $strings);
