@@ -7,17 +7,27 @@ require_once __DIR__ . '/result.php';
 require_once __DIR__ . '/calc.php';
 require_once __DIR__ . '/Balancer.php';
 
-$algo = $argv[2];
-$filename = __DIR__ . '/' . $argv[1];
+$files = [
+  'input/a_example.in',
+  'input/b_should_be_easy.in',
+  'input/c_no_hurry.in',
+  'input/d_metropolis.in',
+  'input/e_high_bonus.in',
+];
 
-list($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides) = getData($filename);
+foreach ($files as $f) {
+  $algo = $argv[1];
+  $filename = __DIR__ . '/' . $f;
 
-$balancer = new Balancer($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides);
-$balancer->$algo();
-$result = $balancer->getResult();
+  list($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides) = getData($filename);
 
-$calc = new Calculator($endpoints, $result);
-$score = $calc->getScore();
-var_dump($score);
+  $balancer = new Balancer($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides);
+  $balancer->$algo();
+  $result = $balancer->getResult();
 
-save($filename . '.out', $result);
+  // $calc = new Calculator($endpoints, $result);
+  // $score = $calc->getScore();
+  // var_dump($score);
+
+  save($filename . '.out', $result);
+}
