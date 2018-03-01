@@ -16,7 +16,7 @@ function getData($filename = "a_example.in")
     $rides = [];
 
     foreach ($rawFileRows as $index => $row) {
-        $rides[$index] = [
+        $rides[$index - 1] = [
             'from' => [$row[0], $row[1]],
             'to' =>  [$row[2], $row[3]],
             'start' => $row[4],
