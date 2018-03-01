@@ -70,4 +70,15 @@ class Balancer
     {
         return $this->result;
     }
+
+    /**
+     * @param $from [x, y]
+     * @param $to [x, y]
+     * @return int
+     */
+    protected function getDistance($from, $to)
+    {
+        return abs($from[0] - $to[0]) + abs($from[1] - $to[1]);
+    }
+
 }
