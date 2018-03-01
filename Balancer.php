@@ -185,13 +185,20 @@ class Balancer
     {
       // var_dump($prev);
       $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
-      $time = $next['start'] - $prev['actual'];
-      return $time >= $dist;
+      $nextDist = $this->nextDist($next);
+      $superTime = $next['start'] - $prev['actual'];
+      $regTime = $next['finish'] - $nextDist - $prev['actual'];
+      return $regTime >= $dist;
+    }
+
+    public function nextDist($next)
+    {
+      return abs($next['from'][0] - $next['to'][0]) + abs($next['from'][1] - $next['to'][1]);
     }
 
     public function hasTimeToFinish($next, $total)
     {
-      $dist = abs($next['from'][0] - $next['to'][0]) + abs($next['from'][1] - $next['to'][1]);
+      $dist = $this->nextDist($next);
       $time = $total - $next['start'];
       return $time >= $dist;
     }
