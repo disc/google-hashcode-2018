@@ -202,47 +202,93 @@ class Balancer
       for ($i = 0; $i < $this->carsCount; $i++) {
         $this->result[] = [];
       }
+      $maxDist = 0;
       foreach ($this->rides as &$rr) {
         $rr['actual'] = $rr['finish'];
+        $rr['dist'] = $this->nextDist($rr);
+        if ($rr['dist'] > $maxDist) {
+          $maxDist = $rr['dist'];
+        }
       }
       usort($this->rides, function($a, $b) {
         if ($a['start'] == $b['start']) return 0;
         return $a['start'] > $b['start'] ? 1 : -1;
       });
-      foreach ($this->rides as $num => $r) {
+      // $percent = 50;
+      // $limit = 0;
+      // usort($dists, function($a, $b) {
+      //   if ($a['dist'] == $b['dist']) return 0;
+      //   return $a['dist'] > $b['dist'] ? 1 : -1;
+      // });
+      // $index = round(count($this->rides) * $percent / 100);
+      // var_dump(count($this->rides));
+      // $this->rides = array_slice($this->rides, 0, $index);
+      // var_dump(count($this->rides));
+      $map = [];
+      foreach ($this->rides as $key => $value) {
+        $map[$value['index']] = $key;
+      }
+      foreach ($this->rides as $num => &$r) {
+        if ($r['dist'] > $maxDist * 0.33) {
+          // echo "$maxDist, {$r['dist']}\n";
+          continue;
+        }
         $carIndex = -1;
-        foreach ($this->result as $i => $rds) {
-          if (count($rds) == 0) {
-            $prev = [
-              'to' => [0, 0],
-              'actual' => 0,
-            ];
-          } else {
-            $prev = $rds[count($rds) - 1];
+        for ($lap = 0; $lap < 2; $lap++) {
+          $prev = null;
+          foreach ($this->result as $i => $rds) {
+            if (count($rds) == 0) {
+              $prev = [
+                'to' => [0, 0],
+                'actual' => 0,
+                'finish' => 0,
+              ];
+            } else {
+              $ind = $rds[count($rds) - 1];
+              $prev = $this->rides[$map[$ind]];
+              // var_dump($prev);
+            }
+            list ($super, $reg) = $this->hasTimeToPickUp($prev, $r);
+            $hasTime = $super || $reg && $lap == 1;
+            $hasFin = $this->hasTimeToFinish($r, $this->steps);
+            // $hasFin = true;
+            if ($hasTime && $hasFin) {
+              $carIndex = $i;
+              break;
+            }
           }
-          if ($this->hasTimeToPickUp($prev, $r) && $this->hasTimeToFinish($r, $this->steps - 1)) {
-            $carIndex = $i;
+          if ($carIndex >= 0) {
+            $r['actual'] = $this->calcActual($r, $prev['actual']);
+            $this->result[$i][] = $r['index'];
             break;
           }
-        }
-        if ($carIndex >= 0) {
-          $this->result[$i][] = $r['index'];
         }
       }
     }
 
+    public function calcActual($next, $minStart)
+    {
+      return max($minStart, $next['start']) + $next['dist'];
+    }
+
     public function hasTimeToPickUp($prev, $next)
     {
+      // var_dump($prev);
       $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
-      $time = $next['start'] - $prev['actual'];
-      return $time >= $dist;
+      $superTime = $next['start'] - $prev['actual'];
+      $regTime = $next['finish'] - $next['dist'] - $prev['actual'];
+      return [$superTime >= $dist, $regTime >= $dist];
+    }
+
+    public function nextDist($next)
+    {
+      return abs($next['from'][0] - $next['to'][0]) + abs($next['from'][1] - $next['to'][1]);
     }
 
     public function hasTimeToFinish($next, $total)
     {
-      $dist = abs($next['from'][0] - $next['to'][0]) + abs($next['from'][1] - $next['to'][1]);
-      $time = $total - $next['start'];
-      return $time >= $dist;
+      $time = min($total, $next['finish']) - $next['start'];
+      return $time >= $next['dist'];
     }
 
     /**
