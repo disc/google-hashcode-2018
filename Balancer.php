@@ -153,6 +153,10 @@ class Balancer
         if ($a['start'] == $b['start']) return 0;
         return $a['start'] > $b['start'] ? 1 : -1;
       });
+      $map = [];
+      foreach ($this->rides as $key => $value) {
+        $map[$value['index']] = $key;
+      }
       foreach ($this->rides as $num => $r) {
         $carIndex = -1;
         foreach ($this->result as $i => $rds) {
@@ -162,7 +166,9 @@ class Balancer
               'actual' => 0,
             ];
           } else {
-            $prev = $rds[count($rds) - 1];
+            $ind = $rds[count($rds) - 1];
+            $prev = $this->rides[$map[$ind]];
+            // var_dump($prev);
           }
           if ($this->hasTimeToPickUp($prev, $r) && $this->hasTimeToFinish($r, $this->steps - 1)) {
             $carIndex = $i;
@@ -177,6 +183,7 @@ class Balancer
 
     public function hasTimeToPickUp($prev, $next)
     {
+      // var_dump($prev);
       $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
       $time = $next['start'] - $prev['actual'];
       return $time >= $dist;
