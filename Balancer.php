@@ -175,7 +175,7 @@ class Balancer
             }
             list ($super, $reg) = $this->hasTimeToPickUp($prev, $r);
             $hasTime = $super || $reg && $lap == 1;
-            $hasFin = $this->hasTimeToFinish($r, $this->steps - 1);
+            $hasFin = $this->hasTimeToFinish($r, $this->steps);
             // $hasFin = true;
             if ($hasTime && $hasFin) {
               $carIndex = $i;
@@ -202,8 +202,8 @@ class Balancer
       // var_dump($prev);
       $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
       $nextDist = $this->nextDist($next);
-      $superTime = $next['start'] - min($prev['actual'], $prev['finish']);
-      $regTime = $next['finish'] - $nextDist - min($prev['actual'], $prev['finish']);
+      $superTime = $next['start'] - $prev['actual'];
+      $regTime = $next['finish'] - $nextDist - $prev['actual'];
       return [$superTime >= $dist, $regTime >= $dist];
     }
 
@@ -215,7 +215,7 @@ class Balancer
     public function hasTimeToFinish($next, $total)
     {
       $dist = $this->nextDist($next);
-      $time = $total - $next['start'];
+      $time = min($total, $next['finish']) - $next['start'];
       return $time >= $dist;
     }
 
