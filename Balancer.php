@@ -41,12 +41,12 @@ class Balancer
 
     public function __construct($rowsCount, $columnsCount, $carsCount, $ridesCount, $bonus, $steps, $rides)
     {
-        $this->rowsCount = $rowsCount;
-        $this->columnsCount = $columnsCount;
-        $this->carsCount = $carsCount;
-        $this->ridesCount = $ridesCount;
-        $this->bonus = $bonus;
-        $this->steps = $steps;
+        $this->rowsCount = (int) $rowsCount;
+        $this->columnsCount = (int) $columnsCount;
+        $this->carsCount = (int) $carsCount;
+        $this->ridesCount = (int) $ridesCount;
+        $this->bonus = (int) $bonus;
+        $this->steps = (int) $steps;
         $this->rides = $rides;
     }
 
@@ -93,13 +93,24 @@ class Balancer
                     $currentLocation
                 );
 
-                foreach ($availableRides as $ride) {
+                $bestRide = $availableRides[0];
 
+                if (!$bestRide) {
+                    break;
                 }
 
-//                $carFreeSteps = $this->steps;
+                unset($this->rides[$bestRide['index']]);
+
+                if (!array_key_exists($i, $cars)) {
+                    $cars[$i] = [];
+                }
+
+                $cars[$i][] = $bestRide['index'];
+                $step += $availableRides[0]['spendSteps'];
             }
         }
+
+        $this->result = $cars;
     }
 
     public function dumbfuck2()
@@ -128,11 +139,13 @@ class Balancer
             $distToGuy = $this->getDistance($carLocation, $ride['from']);
             $distToFinish = $this->getDistance($ride['from'], $ride['to']);
 
+
             if (
-                $ride['start'] >= $currentStep + $distToGuy
-                && $ride['finish'] <= $currentStep + $distToGuy + $distToFinish
+                $ride['start'] <= $currentStep + $distToGuy
+                && $ride['finish'] >= $currentStep + $distToGuy + $distToFinish
             ) {
-                $ride['coeff'] = $this->getCoeffs($carLocation, $ride['start'], $ride['finish']);
+                $ride['coeff'] = $this->getCoeffs($carLocation, $ride['from'], $ride['to']);
+                $ride['spendSteps'] = $distToGuy + $distToFinish;
                 $availableRides[] = $ride;
             }
         }
