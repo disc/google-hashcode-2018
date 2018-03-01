@@ -25,4 +25,5 @@ crashlytics-build.properties
 fabric.properties
 /input/*.out
 /*.out
+/output
 /.idea/

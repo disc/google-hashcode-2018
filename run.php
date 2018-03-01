@@ -8,18 +8,21 @@ require_once __DIR__ . '/calc.php';
 require_once __DIR__ . '/Balancer.php';
 
 $files = [
-  'input/a_example.in',
-  'input/b_should_be_easy.in',
-  'input/c_no_hurry.in',
-  'input/d_metropolis.in',
-  'input/e_high_bonus.in',
+  'a_example.in',
+  'b_should_be_easy.in',
+  'c_no_hurry.in',
+  'd_metropolis.in',
+  'e_high_bonus.in',
 ];
 
-foreach ($files as $f) {
-  $algo = $argv[1];
-  $filename = __DIR__ . '/' . $f;
+$algo = $argv[1];
+@mkdir(__DIR__ . '/output/');
+$dir = __DIR__ . '/output/' . $algo . '/';
+@mkdir($dir);
 
-  list($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides) = getData($filename);
+foreach ($files as $f) {
+  $input = __DIR__ . '/input/' . $f;
+  list($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides) = getData($input);
 
   $balancer = new Balancer($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides);
   $balancer->$algo();
@@ -29,5 +32,6 @@ foreach ($files as $f) {
   // $score = $calc->getScore();
   // var_dump($score);
 
+  $filename = $dir . $f;
   save($filename . '.out', $result);
 }
