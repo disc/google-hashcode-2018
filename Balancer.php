@@ -62,6 +62,14 @@ class Balancer
       ];
     }
 
+    public function example()
+    {
+        $this->result = [
+            1 => [0],
+            2 => [2, 1],
+        ];
+    }
+
 
     /**
      * @return array
