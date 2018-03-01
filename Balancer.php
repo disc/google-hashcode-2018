@@ -79,36 +79,92 @@ class Balancer
       }
     }
 
+    protected $stepsByCar = [];
+    protected $carLocation = [];
+
     public function coeffOfRideDeep()
     {
         $cars = [];
 
-        for ($i = 0; $i < $this->carsCount; ++$i) {
-            $currentLocation = [0, 0];
+        // width
+        while (count($this->rides)) {
+            $startCount = count($this->rides);
 
-            for ($step = 0; $step < $this->steps; ++$step) {
+            for ($car = 0; $car < $this->carsCount; ++$car) {
+                if (!array_key_exists($car, $cars)) {
+                    $cars[$car] = [];
+                }
+
+                if (!array_key_exists($car, $this->stepsByCar)) {
+                    $this->stepsByCar[$car] = 0;
+                }
+
+                if (!array_key_exists($car, $this->carLocation)) {
+                    $this->carLocation[$car] = [0, 0];
+                }
+
+                if ($this->stepsByCar[$car] >= $this->steps) {
+                    continue;
+                }
+
                 $availableRides = $this->getAvailableRides(
                     $this->rides,
-                    $step,
-                    $currentLocation
+                    $this->stepsByCar[$car],
+                    $this->carLocation[$car],
+                    $car
                 );
 
                 $bestRide = $availableRides[0];
 
                 if (!$bestRide) {
-                    break;
+                    continue;
                 }
 
                 unset($this->rides[$bestRide['index']]);
 
-                if (!array_key_exists($i, $cars)) {
-                    $cars[$i] = [];
-                }
+                $cars[$car][] = $bestRide['index'];
+                $this->carLocation[$car] = $bestRide['to'];
+                $this->stepsByCar[$car] += $bestRide['spendSteps'];
+            }
 
-                $cars[$i][] = $bestRide['index'];
-                $step += $availableRides[0]['spendSteps'];
+            if ($startCount == count($this->rides)) {
+                break;
             }
         }
+
+
+        // Deep
+//        for ($i = 0; $i < $this->carsCount; ++$i) {
+//            if (!array_key_exists($i, $cars)) {
+//                $cars[$i] = [];
+//            }
+//
+//            if (!array_key_exists($i, $this->stepsByCar)) {
+//                $this->stepsByCar[$i] = 0;
+//            }
+//
+//            $currentLocation = [0, 0];
+//
+//            for ($step = 0; $step < $this->steps; ++$step) {
+//                $availableRides = $this->getAvailableRides(
+//                    $this->rides,
+//                    $step,
+//                    $currentLocation,
+//                    $i
+//                );
+//
+//                $bestRide = $availableRides[0];
+//
+////                if (!$bestRide) {
+////                    break;
+////                }
+//
+//                unset($this->rides[$bestRide['index']]);
+//
+//                $cars[$i][] = $bestRide['index'];
+//                $currentLocation = $bestRide['to'];
+//                $step += $bestRide['spendSteps'];
+//            }
 
         $this->result = $cars;
     }
@@ -197,20 +253,36 @@ class Balancer
         return $this->result;
     }
 
-    protected function getAvailableRides($freeRides, $currentStep, $carLocation)
+    protected function getAvailableRides($freeRides, $currentStep, $carLocation, $car)
     {
+
         $availableRides = [];
         foreach ($freeRides as $ride) {
             $distToGuy = $this->getDistance($carLocation, $ride['from']);
             $distToFinish = $this->getDistance($ride['from'], $ride['to']);
 
+            $stepsToStart = $currentStep + $distToGuy;
+            $stepToFinish = $currentStep + $distToGuy + $distToFinish;
 
             if (
-                $ride['start'] <= $currentStep + $distToGuy
-                && $ride['finish'] >= $currentStep + $distToGuy + $distToFinish
+                $ride['start'] <= $stepsToStart
+                && $stepToFinish < $ride['finish']
             ) {
-                $ride['coeff'] = $this->getCoeffs($carLocation, $ride['from'], $ride['to']);
+                $ride['coeff'] = 0;
+                $this->getCoeffs(
+                    $carLocation,
+                    $ride['from'],
+                    $ride['to'],
+                    0
+                );
                 $ride['spendSteps'] = $distToGuy + $distToFinish;
+                $availableRides[] = $ride;
+
+
+            } elseif ($stepToFinish <= $ride['finish']) {
+                $waitSteips = $ride['start'] - $distToGuy;
+                $ride['coeff'] = $this->getCoeffs($carLocation, $ride['from'], $ride['to'], $waitSteips);
+                $ride['spendSteps'] = $waitSteips + $distToGuy + $distToFinish;
                 $availableRides[] = $ride;
             }
         }
@@ -227,12 +299,12 @@ class Balancer
         return $availableRides;
     }
 
-    protected function getCoeffs($carCoord, $startCoord, $endCoord)
+    protected function getCoeffs($carCoord, $startCoord, $endCoord, $waitSteips)
     {
         $distToStart = $this->getDistance($carCoord, $startCoord);
         $distStartFinish = $this->getDistance($startCoord, $endCoord);
 
-        return $distToStart + $distStartFinish;
+        return $distToStart + $distStartFinish + $waitSteips;
     }
 
     /**
