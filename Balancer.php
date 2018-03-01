@@ -79,6 +79,18 @@ class Balancer
       }
     }
 
+
+    public function dumbfuck2()
+    {
+      for ($i = 0; $i < $this->carsCount; $i++) {
+        $this->result[] = [];
+      }
+      for ($j = 0; $j < $this->ridesCount; $j++) {
+        $i = $j % $this->carsCount;
+        $this->result[$i][] = $j;
+      }
+    }
+
     /**
      * @return array
      */
