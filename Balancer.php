@@ -124,6 +124,23 @@ class Balancer
       }
     }
 
+    public function dumbfuck3()
+    {
+      for ($i = 0; $i < $this->carsCount; $i++) {
+        $this->result[] = [];
+      }
+      usort($this->rides, function($a, $b) {
+        if ($a['start'] == $b['start']) return 0;
+        return $a['start'] > $b['start'] ? 1 : -1;
+      });
+      foreach ($this->rides as $num => $r) {
+        $i = $num % $this->carsCount;
+        $this->result[$i][] = $r['index'];
+      }
+      for ($j = 0; $j < $this->ridesCount; $j++) {
+      }
+    }
+
     /**
      * @return array
      */
