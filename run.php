@@ -21,6 +21,7 @@ $dir = __DIR__ . '/output/' . $algo . '/';
 @mkdir($dir);
 
 foreach ($files as $f) {
+  echo $f . "\n";
   $input = __DIR__ . '/input/' . $f;
   list($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides) = getData($input);
 

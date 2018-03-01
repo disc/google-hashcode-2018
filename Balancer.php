@@ -141,6 +141,54 @@ class Balancer
       }
     }
 
+    public function smart()
+    {
+      for ($i = 0; $i < $this->carsCount; $i++) {
+        $this->result[] = [];
+      }
+      foreach ($this->rides as &$rr) {
+        $rr['actual'] = $rr['finish'];
+      }
+      usort($this->rides, function($a, $b) {
+        if ($a['start'] == $b['start']) return 0;
+        return $a['start'] > $b['start'] ? 1 : -1;
+      });
+      foreach ($this->rides as $num => $r) {
+        $carIndex = -1;
+        foreach ($this->result as $i => $rds) {
+          if (count($rds) == 0) {
+            $prev = [
+              'to' => [0, 0],
+              'actual' => 0,
+            ];
+          } else {
+            $prev = $rds[count($rds) - 1];
+          }
+          if ($this->hasTimeToPickUp($prev, $r) && $this->hasTimeToFinish($r, $this->steps - 1)) {
+            $carIndex = $i;
+            break;
+          }
+        }
+        if ($carIndex >= 0) {
+          $this->result[$i][] = $r['index'];
+        }
+      }
+    }
+
+    public function hasTimeToPickUp($prev, $next)
+    {
+      $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
+      $time = $next['start'] - $prev['actual'];
+      return $time >= $dist;
+    }
+
+    public function hasTimeToFinish($next, $total)
+    {
+      $dist = abs($next['from'][0] - $next['to'][0]) + abs($next['from'][1] - $next['to'][1]);
+      $time = $total - $next['start'];
+      return $time >= $dist;
+    }
+
     /**
      * @return array
      */
