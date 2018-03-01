@@ -7,8 +7,8 @@ require_once __DIR__ . '/result.php';
 require_once __DIR__ . '/calc.php';
 require_once __DIR__ . '/Balancer.php';
 
-$filename = __DIR__ . '/' . $argv[1];
 $algo = $argv[2];
+$filename = __DIR__ . '/' . $argv[1];
 
 list($rows, $columns, $cars, $ridesCount, $bonus, $steps, $rides) = getData($filename);
 

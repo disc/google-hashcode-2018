@@ -4,7 +4,7 @@ function toString(array $result) {
   $strings = [];
   foreach ($result as $carId => $rideIds) {
     if ($rideIds) {
-      $strings[] = $carId . ' ' . implode(' ', $rideIds);
+      $strings[] = count($rideIds) . ' ' . implode(' ', $rideIds);
     }
   }
   return implode(PHP_EOL, $strings);

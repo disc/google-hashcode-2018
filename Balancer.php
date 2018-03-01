@@ -71,6 +71,14 @@ class Balancer
     }
 
 
+    public function dumbfuck()
+    {
+      $len = min($this->carsCount, $this->ridesCount);
+      for ($i = 0; $i < $len; $i++) {
+        $this->result[] = [$i];
+      }
+    }
+
     /**
      * @return array
      */
