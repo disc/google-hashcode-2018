@@ -1,49 +1,36 @@
 <?php
 
-function getData($filename = "me_at_the_zoo.in")
+function getData($filename = "a_example.in")
 {
     $rows = file($filename);
 
-    $arr = [];
+    $rawFileRows = [];
     foreach ($rows as $rawRow) {
-        $arr[] = explode(' ', $rawRow);
+        $rawFileRows[] = explode(' ', $rawRow);
     }
 
-    list($V,$E,$R,$cacheCount,$cacheCapacity) = $arr[0];
-    $videos = array_map('intval',$arr[1]);
+    list($rows, $columns, $cars, $ridesCount, $bonus, $steps) = $rawFileRows[0];
 
-    $endpoints = array();
+    unset($rawFileRows[0]);
 
-    $endpointId = 0;
-    $currentRow = 2;
-    $endpointCount = 0;
-    while ($currentRow < count($rows)-1)
-    {
-        $latencyDataCenter = (int) $arr[$currentRow][0];
-        $countCacheConnections  = (int) $arr[$currentRow][1];
-        //var_dump($countCacheConnections);
-        $currentRow++;
+    $rides = [];
 
-        $newendpoint = array('latencyDataCenter' => $latencyDataCenter, 'cache' => array());
-        for ($j=0; $j<$countCacheConnections; $j++)
-        {
-            $cacheId = $arr[$currentRow+$j][0];
-
-            $newendpoint['cache'][$cacheId] = (int) $arr[$currentRow+$j][1];
-        }
-        $endpoints[$endpointId] = $newendpoint;
-
-        $currentRow += $countCacheConnections;
-        $endpointId++;
-        if ($endpointId==$E) break;
+    foreach ($rawFileRows as $index => $row) {
+        $rides[$index] = [
+            'from' => [$row[0], $row[1]],
+            'to' =>  [$row[2], $row[3]],
+            'start' => $row[4],
+            'finish' => $row[5],
+        ];
     }
 
-    while ($currentRow < count($rows)-1)
-    {
-        list($videoId, $endpointId, $requestsCount) = $arr[$currentRow];
-        $endpoints[$endpointId]['requests'][$videoId] =  (int) $requestsCount;
-        $currentRow++;
-    }
-
-    return array($endpoints, $videos, (int) $cacheCount, (int) $cacheCapacity);
+    return [
+        'rows' => $rows,
+        'columns' => $columns,
+        'cars' => $cars,
+        'ridesCount' => $ridesCount,
+        'bonus' => $bonus,
+        'steps' => $steps,
+        'rides' => $rides,
+    ];
 }
