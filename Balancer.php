@@ -146,18 +146,37 @@ class Balancer
       for ($i = 0; $i < $this->carsCount; $i++) {
         $this->result[] = [];
       }
+      $maxDist = 0;
       foreach ($this->rides as &$rr) {
         $rr['actual'] = $rr['finish'];
+        $rr['dist'] = $this->nextDist($rr);
+        if ($rr['dist'] > $maxDist) {
+          $maxDist = $rr['dist'];
+        }
       }
       usort($this->rides, function($a, $b) {
         if ($a['start'] == $b['start']) return 0;
         return $a['start'] > $b['start'] ? 1 : -1;
       });
+      // $percent = 50;
+      // $limit = 0;
+      // usort($dists, function($a, $b) {
+      //   if ($a['dist'] == $b['dist']) return 0;
+      //   return $a['dist'] > $b['dist'] ? 1 : -1;
+      // });
+      // $index = round(count($this->rides) * $percent / 100);
+      // var_dump(count($this->rides));
+      // $this->rides = array_slice($this->rides, 0, $index);
+      // var_dump(count($this->rides));
       $map = [];
       foreach ($this->rides as $key => $value) {
         $map[$value['index']] = $key;
       }
       foreach ($this->rides as $num => &$r) {
+        if ($r['dist'] > $maxDist * 0.33) {
+          // echo "$maxDist, {$r['dist']}\n";
+          continue;
+        }
         $carIndex = -1;
         for ($lap = 0; $lap < 2; $lap++) {
           $prev = null;
@@ -193,17 +212,15 @@ class Balancer
 
     public function calcActual($next, $minStart)
     {
-      $dist = $this->nextDist($next);
-      return max($minStart, $next['start']) + $dist;
+      return max($minStart, $next['start']) + $next['dist'];
     }
 
     public function hasTimeToPickUp($prev, $next)
     {
       // var_dump($prev);
       $dist = abs($prev['to'][0] - $next['from'][0]) + abs($prev['to'][1] - $next['from'][1]);
-      $nextDist = $this->nextDist($next);
       $superTime = $next['start'] - $prev['actual'];
-      $regTime = $next['finish'] - $nextDist - $prev['actual'];
+      $regTime = $next['finish'] - $next['dist'] - $prev['actual'];
       return [$superTime >= $dist, $regTime >= $dist];
     }
 
@@ -214,9 +231,8 @@ class Balancer
 
     public function hasTimeToFinish($next, $total)
     {
-      $dist = $this->nextDist($next);
       $time = min($total, $next['finish']) - $next['start'];
-      return $time >= $dist;
+      return $time >= $next['dist'];
     }
 
     /**
