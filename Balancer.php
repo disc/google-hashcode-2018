@@ -79,12 +79,71 @@ class Balancer
       }
     }
 
+    public function coeffOfRideDeep()
+    {
+        $cars = [];
+
+        for ($i = 0; $i < $this->carsCount; ++$i) {
+            $currentLocation = [0, 0];
+
+            for ($step = 0; $step < $this->steps; ++$step) {
+                $availableRides = $this->getAvailableRides(
+                    $this->rides,
+                    $step,
+                    $currentLocation
+                );
+
+                foreach ($availableRides as $ride) {
+
+                }
+
+//                $carFreeSteps = $this->steps;
+            }
+        }
+    }
+
     /**
      * @return array
      */
     public function getResult()
     {
         return $this->result;
+    }
+
+    protected function getAvailableRides($freeRides, $currentStep, $carLocation)
+    {
+        $availableRides = [];
+        foreach ($freeRides as $ride) {
+            $distToGuy = $this->getDistance($carLocation, $ride['from']);
+            $distToFinish = $this->getDistance($ride['from'], $ride['to']);
+
+            if (
+                $ride['start'] >= $currentStep + $distToGuy
+                && $ride['finish'] <= $currentStep + $distToGuy + $distToFinish
+            ) {
+                $ride['coeff'] = $this->getCoeffs($carLocation, $ride['start'], $ride['finish']);
+                $availableRides[] = $ride;
+            }
+        }
+
+        usort(
+            $availableRides,
+            function ($a, $b) {
+                return $a['coeff'] >= $b['coeff']
+                    ? 1
+                    : 0;
+            }
+        );
+
+        return $availableRides;
+    }
+
+    protected function getCoeffs($carCoord, $startCoord, $endCoord)
+    {
+        $distToStart = $this->getDistance($carCoord, $startCoord);
+        $distStartFinish = $this->getDistance($startCoord, $endCoord);
+
+        return $distToStart + $distStartFinish;
     }
 
     /**
